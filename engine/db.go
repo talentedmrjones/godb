@@ -5,6 +5,7 @@ import (
 	"os"
 	"fmt"
 	"strings"
+	"errors"
 	"path/filepath"
 )
 
@@ -22,14 +23,29 @@ func NewDatabase () (*Db) {
 		if (!f.IsDir()) {
 			tableName := strings.Split(f.Name(),".")
 
-			fmt.Printf("opening %s with %d bytes\n", tableName[0], f.Size())
+			fmt.Printf("opening %s with %d bytes and %d chunk size\n", tableName[0], f.Size(), 4096)
 			tbl := NewTable(4096, path, f.Size())
 
-			database.Tables[tableName[0]] = tbl
+			database.AddTable(tableName[0], tbl)
 		}
 
 		return nil
 	})
 
 	return &database
+}
+
+// GetTable returns a *Table from the Db.tables map
+func (db *Db) GetTable (tableName string) (error, *Table) {
+	table, tableExists := db.tables[tableName]
+	if !tableExists {
+		return errors.New("TABLE_UNKNOWN"),nil
+	}
+	return nil, table
+}
+
+// AddTable adds a *Table to the Db.tables map
+func (db *Db) AddTable (tableName string, table *Table) (error) {
+	db.tables[tableName] = table
+	return nil
 }
