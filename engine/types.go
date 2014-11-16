@@ -6,18 +6,18 @@ import (
 
 // Db struct is used to represent a database instance.
 type Db struct {
-	Tables map[string]*Table
+	tables map[string]*Table
 }
 
 
 // Table struct is used to represent a table instance.
 type Table struct  {
-	ChunkSize uint32
-	TableFileSize int64
-	TableFile *os.File
+	chunkSize uint32
+	tableFileSize int64
+	tableFile *os.File
 	//IndicesFileSize int
-	PrimaryIndex map[string]int64
+	primaryIndex map[string]int64
 	//SecondaryIndices map[string]string
 	//indicesHandle *os.File
-	FreeChunks map[int64]uint8
+	freeChunks map[int64]uint8
 }
