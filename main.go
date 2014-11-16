@@ -7,11 +7,13 @@ import (
 )
 
 var database *engine.Db
+var users *engine.Table
 
 func main () {
 
   // initialize a database engine
   database = engine.NewDatabase()
+  _, users = database.GetTable("users")
   create()
   read()
   update()
@@ -23,7 +25,7 @@ func main () {
 func create() {
   start := time.Now()
   data := map[string]string{"id":"123","name":"Richard"}
-  err,data := database.Tables["users"].Create(data)
+  err,data := users.Create(data)
 
   if err!=nil {
     println(string(err.Error()))
@@ -35,7 +37,8 @@ func create() {
 func read() {
   start := time.Now()
   query := map[string]string{"id":"123"}
-  err,user := database.Tables["users"].Read(query)
+
+  err,user := users.Read(query)
 
   if err!=nil {
     println(string(err.Error()))
@@ -48,7 +51,7 @@ func read() {
 func update() {
   start := time.Now()
   data := map[string]string{"id":"123","name":"Mike"}
-  err,data := database.Tables["users"].Update(data)
+  err,data := users.Update(data)
 
   if err!=nil {
     println(string(err.Error()))
@@ -60,7 +63,7 @@ func update() {
 func delete() {
   start := time.Now()
   data := map[string]string{"id":"123"}
-  err := database.Tables["users"].Delete(data)
+  err := users.Delete(data)
   if err!=nil {
     println(string(err.Error()))
   }
