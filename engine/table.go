@@ -8,13 +8,6 @@ import (
   //"fmt"
 )
 
-/* NON-EXPORTED METHODS */
-
-// settableFileSize is used internally to update the file size of the table.
-// The table's file size is used to demarcate EOF which is used for indexing.
-func settableFileSize (tbl *Table, newSize int) {
-  tbl.tableFileSize += int64(newSize)
-}
 
 /* EXPORTED METHODS */
 
@@ -36,6 +29,12 @@ func NewTable (chunkSize uint32, path string, tableFileSize int64) (*Table) {
 // ChunkSize returns the Tables chunk size
 func (tbl *Table) ChunkSize () (uint32) {
   return tbl.chunkSize
+}
+
+// grow expands the file size of the table as records are appends
+// The table's file size is used to demarcate EOF which is used for indexing the position of records.
+func (tbl *Table) grow (newSize int) {
+  tbl.tableFileSize += int64(newSize)
 }
 
 
@@ -83,7 +82,7 @@ func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
 
   tbl.tableFile.WriteAt(b.Bytes(), tbl.tableFileSize)
 
-  settableFileSize(tbl, b.Len())
+  tbl.grow(b.Len())
 
   return nil, data
 }
@@ -171,8 +170,6 @@ func (tbl *Table) Update (data map[string]string) (error, map[string]string) {
   b.Write(bytes.Repeat([]byte{0}, int(tbl.chunkSize)-bufferLength))
 
   tbl.tableFile.WriteAt(b.Bytes(), tbl.primaryIndex[data["id"]])
-
-  settableFileSize(tbl, b.Len())
 
   return nil, data
 }
