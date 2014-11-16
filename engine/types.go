@@ -16,5 +16,5 @@ type Table struct  {
 	tableFileSize int64						// the file size of the table for tracking EOF/positioning for index
 	tableFile *os.File						// a handle to the open .godbd data file
 	primaryIndex map[string]int64	// the in-memory map of primary keys (id) -> position of chunk
-	freeChunks map[int64]uint8		// collection of chunks that will be reused for creates
+	freeChunks []int64		// collection of chunks that will be reused for creates
 }

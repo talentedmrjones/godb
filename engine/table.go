@@ -21,7 +21,7 @@ func NewTable (chunkSize uint32, path string, tableFileSize int64) (*Table) {
     panic(tableFileOpenErr)
   }
 
-  table := Table{chunkSize, tableFileSize, tableFile, make(map[string]int64), make(map[int64]uint8)}
+  table := Table{chunkSize, tableFileSize, tableFile, make(map[string]int64), make([]int64, 0, 5)}
 
   return &table
 }
@@ -35,6 +35,24 @@ func (tbl *Table) ChunkSize () (uint32) {
 // The table's file size is used to demarcate EOF which is used for indexing the position of records.
 func (tbl *Table) grow (newSize int) {
   tbl.tableFileSize += int64(newSize)
+}
+
+// getFreeChunk returns the position of a chunk that was previously marked as deleted so that Create can use disk most efficiently
+func (tbl *Table) getFreeChunk () (int64) {
+
+  var chunkAddress int64 = -1
+
+  if len(tbl.freeChunks) > 0 {
+    chunkAddress = tbl.freeChunks[0]
+    tbl.freeChunks = tbl.freeChunks[1:]
+  }
+
+  return chunkAddress
+}
+
+// addFreeChunk adds a position to the freeChunks slice
+func (tbl *Table) addFreeChunk (position int64) {
+  tbl.freeChunks = append(tbl.freeChunks, position)
 }
 
 
@@ -75,14 +93,19 @@ func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
   b.Write(bytes.Repeat([]byte{0}, int(tbl.chunkSize)-bufferLength))
 
   // determine position by looking to freeChunks
+  var position int64
+  position = tbl.getFreeChunk()
+
+  if position < 0 {
+    position = tbl.tableFileSize
+    tbl.grow(b.Len())
+  }
 
   // initialize primary index as array
   // record position of record in index
-  tbl.primaryIndex[data["id"]] = tbl.tableFileSize
+  tbl.primaryIndex[data["id"]] = position
 
-  tbl.tableFile.WriteAt(b.Bytes(), tbl.tableFileSize)
-
-  tbl.grow(b.Len())
+  tbl.tableFile.WriteAt(b.Bytes(), position)
 
   return nil, data
 }
@@ -191,10 +214,10 @@ func (tbl *Table) Delete (data map[string]string) (error) {
   }
 
   // mark chunk available for reuse
-  tbl.freeChunks[tbl.primaryIndex[data["id"]]]=1
+  tbl.addFreeChunk(tbl.primaryIndex[data["id"]])
 
   // delete record from the index
-  delete(tbl.primaryIndex,data["id"])
+  delete(tbl.primaryIndex, data["id"])
 
   return nil
 

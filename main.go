@@ -20,6 +20,8 @@ func main () {
   read()
   delete()
   read()
+  create()
+  read()
 }
 
 func create() {
