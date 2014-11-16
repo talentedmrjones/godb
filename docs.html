@@ -1,0 +1,303 @@
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+        document.ANALYSIS_DATA = ;
+        document.CALLGRAPH = ;
+        </script>
+
+
+
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/talentedmrjones/godb/engine"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="#pkg-index" class="indexLink">Index</a></dd>
+
+
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>
+Package db provides acces to the godb core engine.
+</p>
+
+			</div>
+		</div>
+
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+
+
+
+
+
+				<dd><a href="#Db">type Db</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#NewDatabase">func NewDatabase() *Db</a></dd>
+
+
+
+					<dd>&nbsp; &nbsp; <a href="#Db.AddTable">func (db *Db) AddTable(tableName string, table *Table) error</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#Db.GetTable">func (db *Db) GetTable(tableName string) (error, *Table)</a></dd>
+
+
+
+				<dd><a href="#Table">type Table</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#NewTable">func NewTable(chunkSize uint32, path string, tableFileSize int64) *Table</a></dd>
+
+
+
+					<dd>&nbsp; &nbsp; <a href="#Table.ChunkSize">func (tbl *Table) ChunkSize() uint32</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#Table.Create">func (tbl *Table) Create(data map[string]string) (error, map[string]string)</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#Table.Delete">func (tbl *Table) Delete(data map[string]string) error</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#Table.Read">func (tbl *Table) Read(data map[string]string) (error, map[string]string)</a></dd>
+
+
+					<dd>&nbsp; &nbsp; <a href="#Table.Update">func (tbl *Table) Update(data map[string]string) (error, map[string]string)</a></dd>
+
+
+
+			</dl>
+			</div><!-- #manual-nav -->
+
+
+
+
+			<h4>Package files</h4>
+			<p>
+			<span style="font-size:90%">
+
+				<a href="/src/pkg/github.com/talentedmrjones/godb/engine/db.go">db.go</a>
+
+				<a href="/src/pkg/github.com/talentedmrjones/godb/engine/table.go">table.go</a>
+
+				<a href="/src/pkg/github.com/talentedmrjones/godb/engine/types.go">types.go</a>
+
+			</span>
+			</p>
+
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		<div id="pkg-callgraph" class="toggle" style="display: none">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Internal Call Graph section">Internal call graph ▹</h2>
+		</div> <!-- .expanded -->
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Internal Call Graph section">Internal call graph ▾</h2>
+                        <p>
+                          In the call graph viewer below, each node
+                          is a function belonging to this package
+                          and its children are the functions it
+                          calls&mdash;perhaps dynamically.
+                        </p>
+                        <p>
+                          The root nodes are the entry points of the
+                          package: functions that may be called from
+                          outside the package.
+                          There may be non-exported or anonymous
+                          functions among them if they are called
+                          dynamically from another package.
+                        </p>
+                        <p>
+                          Click a node to visit that function's source code.
+                          From there you can visit its callers by
+                          clicking its declaring <code>func</code>
+                          token.
+                        </p>
+                        <p>
+                          Functions may be omitted if they were
+                          determined to be unreachable in the
+                          particular programs or tests that were
+                          analyzed.
+                        </p>
+                        <!-- Zero means show all package entry points. -->
+                        <ul style="margin-left: 0.5in" id="callgraph-0" class="treeview"></ul>
+                        </script>
+		</div>
+		</div> <!-- #pkg-callgraph -->
+
+
+
+
+
+
+
+			<h2 id="Db">type <a href="/src/pkg/target/types.go?s=89:159#L1">Db</a></h2>
+			<pre>type Db struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+			<p>
+Db struct is used to represent a database instance.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+				<h3 id="NewDatabase">func <a href="/src/pkg/target/db.go?s=218:243#L5">NewDatabase</a></h3>
+				<pre>func NewDatabase() *<a href="#Db">Db</a></pre>
+				<p>
+NewDatabase creates a Db which contains a map of *Table
+It returns *Db struct
+</p>
+
+
+
+
+
+
+
+				<h3 id="Db.AddTable">func (*Db) <a href="/src/pkg/target/db.go?s=965:1028#L38">AddTable</a></h3>
+				<pre>func (db *<a href="#Db">Db</a>) AddTable(tableName <a href="/pkg/builtin/#string">string</a>, table *<a href="#Table">Table</a>) <a href="/pkg/builtin/#error">error</a></pre>
+				<p>
+AddTable adds a *Table to the Db.tables map
+</p>
+
+
+
+
+
+
+				<h3 id="Db.GetTable">func (*Db) <a href="/src/pkg/target/db.go?s=729:786#L29">GetTable</a></h3>
+				<pre>func (db *<a href="#Db">Db</a>) GetTable(tableName <a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#error">error</a>, *<a href="#Table">Table</a>)</pre>
+				<p>
+GetTable returns a *Table from the Db.tables map
+</p>
+
+
+
+
+
+
+
+
+			<h2 id="Table">type <a href="/src/pkg/target/types.go?s=217:651#L4">Table</a></h2>
+			<pre>type Table struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+			<p>
+Table struct is used to represent a table instance.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+				<h3 id="NewTable">func <a href="/src/pkg/target/table.go?s=181:256#L6">NewTable</a></h3>
+				<pre>func NewTable(chunkSize <a href="/pkg/builtin/#uint32">uint32</a>, path <a href="/pkg/builtin/#string">string</a>, tableFileSize <a href="/pkg/builtin/#int64">int64</a>) *<a href="#Table">Table</a></pre>
+				<p>
+NewTable is used to open a .godbd file.
+It returns a *Table struct
+</p>
+
+
+
+
+
+
+
+				<h3 id="Table.ChunkSize">func (*Table) <a href="/src/pkg/target/table.go?s=554:593#L20">ChunkSize</a></h3>
+				<pre>func (tbl *<a href="#Table">Table</a>) ChunkSize() <a href="/pkg/builtin/#uint32">uint32</a></pre>
+				<p>
+ChunkSize returns the Tables chunk size
+</p>
+
+
+
+
+
+
+				<h3 id="Table.Create">func (*Table) <a href="/src/pkg/target/table.go?s=1024:1100#L33">Create</a></h3>
+				<pre>func (tbl *<a href="#Table">Table</a>) Create(data map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#error">error</a>, map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Create writes a record to the table&#39;s .godbd file.
+It returns an error|nil or on success a map[string]string (the data that it was original given)
+</p>
+
+
+
+
+
+
+				<h3 id="Table.Delete">func (*Table) <a href="/src/pkg/target/table.go?s=4451:4508#L169">Delete</a></h3>
+				<pre>func (tbl *<a href="#Table">Table</a>) Delete(data map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>) <a href="/pkg/builtin/#error">error</a></pre>
+				<p>
+Delete removes the record from the index and marks the chunk for reuse
+</p>
+
+
+
+
+
+
+				<h3 id="Table.Read">func (*Table) <a href="/src/pkg/target/table.go?s=2277:2351#L83">Read</a></h3>
+				<pre>func (tbl *<a href="#Table">Table</a>) Read(data map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#error">error</a>, map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Read reads a record from the table&#39;s .godbd file
+It returns []byte
+</p>
+
+
+
+
+
+
+				<h3 id="Table.Update">func (*Table) <a href="/src/pkg/target/table.go?s=3378:3454#L126">Update</a></h3>
+				<pre>func (tbl *<a href="#Table">Table</a>) Update(data map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#error">error</a>, map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Updates replaces a record to the table&#39;s .godbd file.
+It returns an error or on success a map[string]string (the data that it was original given)
+</p>
