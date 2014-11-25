@@ -1,42 +1,61 @@
 package server
 
 import (
+	//"bufio"
 	"fmt"
-	"bufio"
+	//"io"
 	"log"
 	"net"
+	"os"
 )
 
+// Run starts listening and initializes channels and kicks off various go routines
 func Run() {
-
-	// Listen on TCP port 2000 on all interfaces.
-	l, err := net.Listen("tcp", ":2000")
+	ln, err := net.Listen("tcp", ":6000")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	defer l.Close()
 
+
+	// loop forever waiting on new connections
 	for {
-		// Wait for a connection.
-		conn, err := l.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			continue
 		}
-		// Handle the connection in a new goroutine.
-		// The loop then returns to accepting, so that
-		// multiple connections may be served concurrently.
-		go func(c net.Conn) {
-			connReader := bufio.NewReader(conn)
-	    for {
-	        line, err := connReader.ReadBytes(byte("\u2404"))
-					if err!=nil {
-						panic(err)
-					}
-					fmt.Printf("%v", line)
-	    }
-			// Shut down the connection.
-			c.Close()
-		}(conn)
+
+		// run this in a thread so it doesnt block the for loop
+		go handleConnection(conn)
+	} // end for
+}
+
+
+// handleConnection initializes new Clients
+func handleConnection(c net.Conn) {
+
+	// when handleConnection finishes, execute c.Close thereby closing the network connection
+	defer c.Close()
+
+	// initialize an instance of the Client struct
+	client := Client{
+		conn:     c, // store the network connection
+		ch:       make(chan string), // store a channel for strings
 	}
+
+
+
+	// when the handleConnection finishes, execute this closure
+	defer func() {
+		// log to server console
+		log.Printf("Connection from %v closed.\n", c.RemoteAddr())
+		// push the client into the rmchan for removal
+		//rmchan <- client
+	}()
+
+	// run this in a separate thread so as not to block client.WriteLinesFrom
+	//go client.Send()
+	client.Receive()
 }
