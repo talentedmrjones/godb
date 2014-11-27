@@ -5,7 +5,7 @@ import (
   "encoding/gob"
   "bytes"
   "errors"
-  //"fmt"
+  "fmt"
 )
 
 
@@ -13,7 +13,7 @@ import (
 
 // NewTable is used to open a .godbd file.
 // It returns a *Table struct
-func NewTable (chunkSize uint32, path string, tableFileSize int64) (*Table) {
+func NewTable (chunkSize uint32, path string, tableFileSize int64) *Table {
 
   tableFile, tableFileOpenErr := os.OpenFile(path, os.O_RDWR, 0)
 
@@ -21,13 +21,13 @@ func NewTable (chunkSize uint32, path string, tableFileSize int64) (*Table) {
     panic(tableFileOpenErr)
   }
 
-  table := Table{chunkSize, tableFileSize, tableFile, make(map[string]int64), make([]int64, 0, 5)}
+  table := Table{chunkSize, tableFileSize, tableFile, make(map[string]int64), make([]int64, 0, 5), make(chan *Command)}
 
   return &table
 }
 
 // ChunkSize returns the Tables chunk size
-func (tbl *Table) ChunkSize () (uint32) {
+func (tbl *Table) ChunkSize () uint32 {
   return tbl.chunkSize
 }
 
@@ -38,7 +38,7 @@ func (tbl *Table) grow (newSize int) {
 }
 
 // getFreeChunk returns the position of a chunk that was previously marked as deleted so that Create can use disk most efficiently
-func (tbl *Table) getFreeChunk () (int64) {
+func (tbl *Table) getFreeChunk () int64 {
 
   var chunkAddress int64 = -1
 
@@ -57,8 +57,8 @@ func (tbl *Table) addFreeChunk (position int64) {
 
 
 // Create writes a record to the table's .godbd file.
-// It returns an error|nil or on success a map[string]string (the data that it was original given)
-func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
+// It returns an error|nil or on success a map[string][]byte (the data that it was original given)
+func (tbl *Table) Create (data map[string][]byte) (error, map[string][]byte) {
 
   // ensure id field exists
   if _, dataIdExists := data["id"]; !dataIdExists {
@@ -66,7 +66,7 @@ func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
     return err, nil
   }
 
-  if _, primaryIndexExists := tbl.primaryIndex[data["id"]]; primaryIndexExists {
+  if _, primaryIndexExists := tbl.primaryIndex[string(data["id"])]; primaryIndexExists {
     // id exists in index, therefore not new
     return errors.New("ID_NON_UNIQUE"), nil
   }
@@ -103,7 +103,7 @@ func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
 
   // initialize primary index as array
   // record position of record in index
-  tbl.primaryIndex[data["id"]] = position
+  tbl.primaryIndex[string(data["id"])] = position
 
   tbl.tableFile.WriteAt(b.Bytes(), position)
 
@@ -113,7 +113,7 @@ func (tbl *Table) Create (data map[string]string) (error, map[string]string) {
 
 // Read reads a record from the table's .godbd file
 // It returns []byte
-func (tbl *Table) Read (data map[string]string) (error, map[string]string) {
+func (tbl *Table) Read (data map[string][]byte) (error, map[string][]byte) {
 
   // data must include an id
   if _,idok := data["id"]; !idok {
@@ -122,7 +122,7 @@ func (tbl *Table) Read (data map[string]string) (error, map[string]string) {
   }
 
   // find the offset and byte length from index
-  id := data["id"]
+  id := string(data["id"])
   if _, indexOk := tbl.primaryIndex[id]; !indexOk {
     // wasn't found
     err := errors.New("NOT_FOUND")
@@ -143,7 +143,7 @@ func (tbl *Table) Read (data map[string]string) (error, map[string]string) {
   // decode the buffer
   bufReader := bytes.NewReader(buf)
   d := gob.NewDecoder(bufReader)
-  var decodedMap map[string]string
+  var decodedMap map[string][]byte
 
   // decode data
   decodeErr := d.Decode(&decodedMap)
@@ -155,8 +155,8 @@ func (tbl *Table) Read (data map[string]string) (error, map[string]string) {
 }
 
 // Updates replaces a record to the table's .godbd file.
-// It returns an error or on success a map[string]string (the data that it was original given)
-func (tbl *Table) Update (data map[string]string) (error, map[string]string) {
+// It returns an error or on success a map[string][]byte (the data that it was original given)
+func (tbl *Table) Update (data map[string][]byte) (error, map[string][]byte) {
 
   // ensure id field exists
   if _, dataIdExists := data["id"]; !dataIdExists {
@@ -165,7 +165,7 @@ func (tbl *Table) Update (data map[string]string) (error, map[string]string) {
   }
 
   // ensure record index contains the record
-  if _, indexOk := tbl.primaryIndex[data["id"]]; !indexOk {
+  if _, indexOk := tbl.primaryIndex[string(data["id"])]; !indexOk {
     // wasn't found
     err := errors.New("NOT_FOUND")
     return err, nil
@@ -192,14 +192,14 @@ func (tbl *Table) Update (data map[string]string) (error, map[string]string) {
   //  pad the buffer out to the chunkSize
   b.Write(bytes.Repeat([]byte{0}, int(tbl.chunkSize)-bufferLength))
 
-  tbl.tableFile.WriteAt(b.Bytes(), tbl.primaryIndex[data["id"]])
+  tbl.tableFile.WriteAt(b.Bytes(), tbl.primaryIndex[string(data["id"])])
 
   return nil, data
 }
 
 
 // Delete removes the record from the index and marks the chunk for reuse
-func (tbl *Table) Delete (data map[string]string) (error) {
+func (tbl *Table) Delete (data map[string][]byte) error {
 
   // ensure id field exists
   if _, dataIdExists := data["id"]; !dataIdExists {
@@ -208,17 +208,33 @@ func (tbl *Table) Delete (data map[string]string) (error) {
   }
 
   // ensure record index contains the record
-  if _, indexOk := tbl.primaryIndex[data["id"]]; !indexOk {
+  if _, indexOk := tbl.primaryIndex[string(data["id"])]; !indexOk {
     // wasn't found
     return nil
   }
 
   // mark chunk available for reuse
-  tbl.addFreeChunk(tbl.primaryIndex[data["id"]])
+  tbl.addFreeChunk(tbl.primaryIndex[string(data["id"])])
 
   // delete record from the index
-  delete(tbl.primaryIndex, data["id"])
+  delete(tbl.primaryIndex, string(data["id"]))
 
   return nil
 
+}
+
+func (table *Table) Run () {
+
+  for command := range table.CommandChan {
+    switch command.Action {
+      case "c":
+        fmt.Printf("Creating: %v for client %v", command.Data, command.Client)
+        // TODO send data back to client
+        createErr, _ := table.Create(command.Data)
+        if createErr != nil {
+          // TODO handle error
+          fmt.Printf("%s", createErr)
+        }
+    }
+	}
 }

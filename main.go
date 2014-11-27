@@ -3,14 +3,15 @@ package main
 import (
   //"fmt"
   //"time"
-  "github.com/talentedmrjones/godb/server"
+  "github.com/talentedmrjones/godb/engine"
 )
 
 //var database *engine.Db
 //var users *engine.Table
 
 func main () {
-  server.Run()
+  databases := engine.LoadDatabases("./data")
+  engine.RunServer(databases)
   // initialize a database engine
   // database = engine.NewDatabase()
   // _, users = database.GetTable("users")
