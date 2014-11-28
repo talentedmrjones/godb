@@ -40,8 +40,8 @@ func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 
 	// initialize an instance of the Client struct
 	client := Client{
-		conn:     c, // store the network connection
-		//ch:       make(chan string), // store a channel for strings
+		conn: c, // store the network connection
+		replies: make(chan *Reply), // channel for Replies
 	}
 
 	// when the handleConnection finishes, execute this closure

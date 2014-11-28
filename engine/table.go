@@ -16,7 +16,7 @@ type Table struct  {
   // TODO look into map[[]byte]int64
   primaryIndex 		map[string]int64		// the in-memory map of primary keys (id) -> position of chunk
   freeChunks 			[]int64							// collection of chunks that will be reused for creates
-  Chan 		         chan *Command				// a channel for client to push incoming records
+  Commands 		    chan *Command				// a channel for client to push incoming records
 }
 
 // NewTable is used to open a .godbd file.
@@ -229,7 +229,7 @@ func (tbl *Table) Delete (data map[string][]byte) error {
 
 func (table *Table) Run () {
 
-  for command := range table.Chan {
+  for command := range table.Commands {
     switch command.Action {
       case "c":
         // TODO send data back to client

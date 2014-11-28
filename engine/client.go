@@ -12,8 +12,8 @@ import (
 
 // Client is a single tcp connection
 type Client struct {
-	conn		net.Conn 		// holds the network socket
-	//ch 			chan string			// receives replies/errors from table
+	conn			net.Conn 		// holds the network socket
+	replies 	chan string			// receives replies/errors from table
 }
 
 // ReadLinesInto continuously looks for data from the connection and relays that to the message channel
