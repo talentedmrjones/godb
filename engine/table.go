@@ -5,7 +5,7 @@ import (
   "encoding/gob"
   "bytes"
   "errors"
-  "fmt"
+  //"fmt"
 )
 
 // Table struct is used to represent a table instance.
@@ -16,7 +16,7 @@ type Table struct  {
   // TODO look into map[[]byte]int64
   primaryIndex 		map[string]int64		// the in-memory map of primary keys (id) -> position of chunk
   freeChunks 			[]int64							// collection of chunks that will be reused for creates
-  Commands 		    chan *Command				// a channel for client to push incoming records
+  commands 		    chan *Command				// a channel for client to push incoming records
 }
 
 // NewTable is used to open a .godbd file.
@@ -60,19 +60,18 @@ func (tbl *Table) addFreeChunk (position int64) {
 
 
 // Create writes a record to the table's .godbd file.
-// It returns an error|nil or on success a map[string][]byte (the data that it was original given)
-func (tbl *Table) Create (data map[string][]byte) (error, map[string][]byte) {
+// It returns an error and status code
+func (tbl *Table) Create (data map[string][]byte) (string, uint16) {
 
   // ensure id field exists
   id, dataIdExists := data["id"]
   if !dataIdExists {
-    err := errors.New("ID_MISSING")
-    return err, nil
+    return "ID_MISSING", 400
   }
 
   if _, primaryIndexExists := tbl.primaryIndex[string(id)]; primaryIndexExists {
     // id exists in index, therefore not new
-    return errors.New("ID_NON_UNIQUE"), nil
+    return "ID_NON_UNIQUE", 400
   }
 
   // encode data
@@ -80,7 +79,7 @@ func (tbl *Table) Create (data map[string][]byte) (error, map[string][]byte) {
   e := gob.NewEncoder(dataBuffer)
   err := e.Encode(data)
   if err != nil {
-      return errors.New("ENCODE_FAILED"), nil
+      return "ENCODE_FAILED", 500
   }
 
   bufferLength := dataBuffer.Len()
@@ -89,8 +88,7 @@ func (tbl *Table) Create (data map[string][]byte) (error, map[string][]byte) {
   // TODO: test
 
   if uint32(bufferLength)>tbl.chunkSize {
-    bufferLengthErr :=  errors.New("TOO_LARGE")
-    return bufferLengthErr, nil
+    return "TOO_LARGE", 400
   }
 
   //  pad the buffer out to the chunkSize
@@ -111,7 +109,7 @@ func (tbl *Table) Create (data map[string][]byte) (error, map[string][]byte) {
 
   tbl.tableFile.WriteAt(dataBuffer.Bytes(), position)
 
-  return nil, data
+  return "", 201
 }
 
 
@@ -229,17 +227,23 @@ func (tbl *Table) Delete (data map[string][]byte) error {
 
 func (table *Table) Run () {
 
-  for command := range table.Commands {
+  for command := range table.commands {
     switch command.Action {
       case "c":
         // TODO send data back to client
-          createErr, _ := table.Create(command.Data)
-          if createErr != nil {
-            // TODO handle error
-            fmt.Printf("Create error %s\n", createErr)
-          } else {
-            fmt.Printf("Record created\n")
-          }
+          go func () {
+            createErr, createStatus := table.Create(command.Data)
+            reply(command, createErr, createStatus)
+          }()
     }
 	}
+}
+
+func reply (command *Command, err string, status uint16 ) {
+  // create *Reply
+  reply := &Reply{}
+  reply.Id = command.Id
+  reply.Status = status
+  reply.Error = err
+  command.client.replies <- reply
 }

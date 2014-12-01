@@ -40,7 +40,7 @@ func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 
 	// initialize an instance of the Client struct
 	client := Client{
-		conn: c, // store the network connection
+		socket: c, // store the network connection
 		replies: make(chan *Reply), // channel for Replies
 	}
 
@@ -53,6 +53,6 @@ func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 	}()
 
 	// run this in a separate thread so as not to block client.WriteLinesFrom
-	//go client.Send()
+	go client.Send()
 	client.Receive(databases)
 }

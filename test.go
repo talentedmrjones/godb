@@ -1,15 +1,15 @@
 package main
 
 import (
-	//"encoding/binary"
 	"fmt"
-	)
+	"time"
+)
 
 func main () {
-	data := make(map[string]interface{})
-	data["database"]="tmj"
-	data["table"]="users"
-	data["data"]= make(map[string]interface{})
-	data["data"]["user"]="Richard"
-	fmt.Printf("%v", data)
+	now := time.Now()
+	fmt.Printf("%v\n", time.Since(now))
+	fmt.Printf("%v\n", time.Since(now))
+	fmt.Printf("%v\n", time.Since(now))
+	fmt.Printf("%v\n", time.Since(now))
+	fmt.Printf("%v\n", time.Since(now))
 }
