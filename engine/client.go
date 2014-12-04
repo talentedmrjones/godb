@@ -54,7 +54,7 @@ func (c *Client) Receive(databases map[string]map[string]*Table) {
 		}
 		command.client = c
 
-		fmt.Printf("Received %s on %s.%s %v\n", command.Action, command.Db, command.Table, command.Data)
+		fmt.Printf("Received %s on %s.%s %v\n", command.Action, command.Db, command.Table, command.Query)
 		// deliver data to databases table
 		databases[command.Db][command.Table].commands<- command
 

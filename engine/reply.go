@@ -4,6 +4,12 @@ package engine
 type Reply struct {
 	Id			string
 	Status  uint16
-	Records	[]map[string][]byte
+	Result	Records
 	Error		string
+}
+
+func NewReply (id string) *Reply {
+	reply := &Reply{}
+	reply.Id = id
+	return reply
 }

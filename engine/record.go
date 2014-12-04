@@ -1,9 +1,11 @@
 package engine
 
 type Record struct {
-	Db			string
-	Table 	string
-	Data		map[string][]byte
-	Action 	string
-	Client 	*Client
+	Data	map[string][]byte
+}
+
+type Records []Record
+
+func NewRecord () Record {
+	return Record{make(map[string][]byte)}
 }

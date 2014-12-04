@@ -61,17 +61,17 @@ func (tbl *Table) addFreeChunk (position int64) {
 
 // Create writes a record to the table's .godbd file.
 // It returns an error and status code
-func (tbl *Table) Create (data map[string][]byte) (string, uint16) {
+func (tbl *Table) Create (data map[string][]byte) (error, uint16) {
 
   // ensure id field exists
   id, dataIdExists := data["id"]
   if !dataIdExists {
-    return "ID_MISSING", 400
+    return errors.New("ID_MISSING"), 400
   }
 
   if _, primaryIndexExists := tbl.primaryIndex[string(id)]; primaryIndexExists {
     // id exists in index, therefore not new
-    return "ID_NON_UNIQUE", 400
+    return errors.New("ID_NON_UNIQUE"), 400
   }
 
   // encode data
@@ -79,7 +79,7 @@ func (tbl *Table) Create (data map[string][]byte) (string, uint16) {
   e := gob.NewEncoder(dataBuffer)
   err := e.Encode(data)
   if err != nil {
-      return "ENCODE_FAILED", 500
+      return errors.New("ENCODE_FAILED"), 500
   }
 
   bufferLength := dataBuffer.Len()
@@ -88,7 +88,7 @@ func (tbl *Table) Create (data map[string][]byte) (string, uint16) {
   // TODO: test
 
   if uint32(bufferLength)>tbl.chunkSize {
-    return "TOO_LARGE", 400
+    return errors.New("TOO_LARGE"), 400
   }
 
   //  pad the buffer out to the chunkSize
@@ -109,18 +109,20 @@ func (tbl *Table) Create (data map[string][]byte) (string, uint16) {
 
   tbl.tableFile.WriteAt(dataBuffer.Bytes(), position)
 
-  return "", 201
+  return nil, 201
 }
 
 
 // Read reads a record from the table's .godbd file
 // It returns []byte
-func (tbl *Table) Read (data map[string][]byte) (error, map[string][]byte) {
+func (tbl *Table) Read (data map[string][]byte) (error, uint16, Records) {
+
+  var result Records
 
   // data must include an id
   if _,idok := data["id"]; !idok {
     err := errors.New("ID_MISSING")
-    return err,nil
+    return err, 400, result
   }
 
   // find the offset and byte length from index
@@ -128,7 +130,7 @@ func (tbl *Table) Read (data map[string][]byte) (error, map[string][]byte) {
   if _, indexOk := tbl.primaryIndex[id]; !indexOk {
     // wasn't found
     err := errors.New("NOT_FOUND")
-    return err,nil
+    return err, 400, result
   }
 
   primaryIndex := tbl.primaryIndex[id]
@@ -145,15 +147,18 @@ func (tbl *Table) Read (data map[string][]byte) (error, map[string][]byte) {
   // decode the buffer
   bufReader := bytes.NewReader(buf)
   d := gob.NewDecoder(bufReader)
-  var decodedMap map[string][]byte
 
+  decodedMap := make(map[string][]byte)
   // decode data
   decodeErr := d.Decode(&decodedMap)
   if decodeErr != nil {
+      // TODO handle this error to return 500
       panic(decodeErr)
   }
+  //fmt.Printf("%#v\n", result)
 
-  return nil, decodedMap
+  result = append(result, Record{decodedMap})
+  return nil, 200, result
 }
 
 // Updates replaces a record to the table's .godbd file.
@@ -231,19 +236,28 @@ func (table *Table) Run () {
     switch command.Action {
       case "c":
         // TODO send data back to client
-          go func () {
-            createErr, createStatus := table.Create(command.Data)
-            reply(command, createErr, createStatus)
-          }()
+        go func () {
+          var err error
+          reply := NewReply(command.Id)
+          err, reply.Status = table.Create(command.Query)
+          if err != nil {
+            reply.Error = err.Error()
+          }
+          // create does not need to set reply.Records
+          command.client.replies<-reply
+        }()
+
+      case "r":
+        // TODO
+        go func () {
+          var err error
+          reply := NewReply(command.Id)
+          err, reply.Status, reply.Result = table.Read(command.Query)
+          if err != nil {
+            reply.Error = err.Error()
+          }
+          command.client.replies<-reply
+        }()
     }
 	}
-}
-
-func reply (command *Command, err string, status uint16 ) {
-  // create *Reply
-  reply := &Reply{}
-  reply.Id = command.Id
-  reply.Status = status
-  reply.Error = err
-  command.client.replies <- reply
 }

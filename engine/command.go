@@ -5,6 +5,6 @@ type Command struct {
 	Action 	string
 	Db			string
 	Table 	string
-	Data		map[string][]byte
+	Query		map[string][]byte
 	client 	*Client
 }
