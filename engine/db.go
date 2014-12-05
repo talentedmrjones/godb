@@ -42,8 +42,8 @@ func NewDatabase (path string) (map[string]*Table) {
 		if (!f.IsDir()) {
 			tableName := strings.Split(f.Name(),".")
 
-			fmt.Printf("adding table %s %d/%d\n", tableName[0], 4096, f.Size())
-			tbl := NewTable(4096, path, f.Size())
+			fmt.Printf("adding table %s %d/%d\n", tableName[0], 512, f.Size())
+			tbl := NewTable(512, path, f.Size())
 			// TODO see if better place for this goroutine
 			go tbl.Run()
 			database[tableName[0]]=tbl

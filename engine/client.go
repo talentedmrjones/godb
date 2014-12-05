@@ -13,7 +13,16 @@ import (
 // Client is a single tcp connection
 type Client struct {
 	socket		net.Conn 		// holds the network socket
-	replies 	chan *Reply	// receives replies
+	replies 	chan Reply	// receives replies
+}
+
+func NewClient(conn net.Conn) *Client {
+	// initialize an instance of the Client struct
+	return &Client{
+		socket: conn, // store the network connection
+		replies: make(chan Reply), // channel for Replies
+	}
+
 }
 
 // Receive continuously looks for data from the socket and relays that to a table's command channel
@@ -54,12 +63,10 @@ func (c *Client) Receive(databases map[string]map[string]*Table) {
 		}
 		command.client = c
 
-		fmt.Printf("Received %s on %s.%s %v\n", command.Action, command.Db, command.Table, command.Query)
+		//fmt.Printf("Received %s on %s.%s %v\n", command.Action, command.Db, command.Table, command.Query)
 		// deliver data to databases table
 		databases[command.Db][command.Table].commands<- command
 
-		// push the line received above onto the channel
-		//msgchan <- fmt.Sprintf("%s", line)
 	}
 }
 
@@ -67,7 +74,7 @@ func (c *Client) Receive(databases map[string]map[string]*Table) {
 // ReadLinesInto continuously looks for data from the connection and relays that to the message channel
 func (c *Client) Send() {
 	for reply := range c.replies {
-		fmt.Printf("reply: %v\n", reply)
+		//fmt.Printf("reply: %v\n", reply)
 		// gob encode reply into payload
 		var payloadEncodingBuffer bytes.Buffer
 		payloadEncoder := gob.NewEncoder(&payloadEncodingBuffer)

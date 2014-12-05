@@ -39,10 +39,7 @@ func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 	defer c.Close()
 
 	// initialize an instance of the Client struct
-	client := Client{
-		socket: c, // store the network connection
-		replies: make(chan *Reply), // channel for Replies
-	}
+	client := NewClient(c)
 
 	// when the handleConnection finishes, execute this closure
 	defer func() {

@@ -163,19 +163,19 @@ func (tbl *Table) Read (data map[string][]byte) (error, uint16, Records) {
 
 // Updates replaces a record to the table's .godbd file.
 // It returns an error or on success a map[string][]byte (the data that it was original given)
-func (tbl *Table) Update (data map[string][]byte) (error, map[string][]byte) {
+func (tbl *Table) Update (data map[string][]byte) (error, uint16) {
 
   // ensure id field exists
   if _, dataIdExists := data["id"]; !dataIdExists {
     err := errors.New("ID_MISSING")
-    return err, nil
+    return err, 400
   }
 
   // ensure record index contains the record
   if _, indexOk := tbl.primaryIndex[string(data["id"])]; !indexOk {
     // wasn't found
     err := errors.New("NOT_FOUND")
-    return err, nil
+    return err, 404
   }
 
   // encode data
@@ -183,7 +183,7 @@ func (tbl *Table) Update (data map[string][]byte) (error, map[string][]byte) {
   e := gob.NewEncoder(b)
   err := e.Encode(data)
   if err != nil {
-      return errors.New("ENCODE_FAILED"), nil
+      return errors.New("ENCODE_FAILED"), 500
   }
 
   bufferLength := b.Len()
@@ -193,7 +193,7 @@ func (tbl *Table) Update (data map[string][]byte) (error, map[string][]byte) {
 
   if uint32(bufferLength)>tbl.chunkSize {
     bufferLengthErr :=  errors.New("TOO_LARGE")
-    return bufferLengthErr, nil
+    return bufferLengthErr, 400
   }
 
   //  pad the buffer out to the chunkSize
@@ -201,7 +201,7 @@ func (tbl *Table) Update (data map[string][]byte) (error, map[string][]byte) {
 
   tbl.tableFile.WriteAt(b.Bytes(), tbl.primaryIndex[string(data["id"])])
 
-  return nil, data
+  return nil, 200
 }
 
 
@@ -253,6 +253,18 @@ func (table *Table) Run () {
           var err error
           reply := NewReply(command.Id)
           err, reply.Status, reply.Result = table.Read(command.Query)
+          if err != nil {
+            reply.Error = err.Error()
+          }
+          command.client.replies<-reply
+        }()
+
+      case "u":
+        // TODO
+        go func () {
+          var err error
+          reply := NewReply(command.Id)
+          err, reply.Status = table.Update(command.Query)
           if err != nil {
             reply.Error = err.Error()
           }

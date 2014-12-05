@@ -8,8 +8,8 @@ type Reply struct {
 	Error		string
 }
 
-func NewReply (id string) *Reply {
-	reply := &Reply{}
+func NewReply (id string) Reply {
+	reply := Reply{}
 	reply.Id = id
 	return reply
 }
