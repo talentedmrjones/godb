@@ -206,18 +206,18 @@ func (tbl *Table) Update (data map[string][]byte) (error, uint16) {
 
 
 // Delete removes the record from the index and marks the chunk for reuse
-func (tbl *Table) Delete (data map[string][]byte) error {
+func (tbl *Table) Delete (data map[string][]byte) (error, uint16) {
 
   // ensure id field exists
   if _, dataIdExists := data["id"]; !dataIdExists {
     err := errors.New("ID_MISSING")
-    return err
+    return err, 400
   }
 
   // ensure record index contains the record
   if _, indexOk := tbl.primaryIndex[string(data["id"])]; !indexOk {
-    // wasn't found
-    return nil
+    err := errors.New("NOT_FOUND")
+    return err, 404
   }
 
   // mark chunk available for reuse
@@ -226,7 +226,7 @@ func (tbl *Table) Delete (data map[string][]byte) error {
   // delete record from the index
   delete(tbl.primaryIndex, string(data["id"]))
 
-  return nil
+  return nil, 204
 
 }
 
@@ -265,6 +265,18 @@ func (table *Table) Run () {
           var err error
           reply := NewReply(command.Id)
           err, reply.Status = table.Update(command.Query)
+          if err != nil {
+            reply.Error = err.Error()
+          }
+          command.client.replies<-reply
+        }()
+
+      case "d":
+        // TODO
+        go func () {
+          var err error
+          reply := NewReply(command.Id)
+          err, reply.Status = table.Delete(command.Query)
           if err != nil {
             reply.Error = err.Error()
           }
