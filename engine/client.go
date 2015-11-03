@@ -26,7 +26,7 @@ func NewClient(conn net.Conn) *Client {
 }
 
 // Receive continuously looks for data from the socket and relays that to a table's command channel
-func (c *Client) Receive(databases map[string]map[string]*Table) {
+func (c *Client) receive(databases map[string]map[string]*Table) {
 	// create a buffered reader
 	buf := bufio.NewReader(c.socket)
 
@@ -64,15 +64,23 @@ func (c *Client) Receive(databases map[string]map[string]*Table) {
 		command.client = c
 
 		//fmt.Printf("Received %s on %s.%s %v\n", command.Action, command.Db, command.Table, command.Query)
+
+		// if table exists in command
 		// deliver data to databases table
 		databases[command.Db][command.Table].commands<- command
+
+		// if db exists deliver data to database
+		//databases[command.Db].commands<- command
+
+		// if no table or db exists deliver to engine
+		//
 
 	}
 }
 
 
 // ReadLinesInto continuously looks for data from the connection and relays that to the message channel
-func (c *Client) Send() {
+func (c *Client) send() {
 	for reply := range c.replies {
 		//fmt.Printf("reply: %v\n", reply)
 		// gob encode reply into payload

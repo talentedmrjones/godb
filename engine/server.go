@@ -50,6 +50,6 @@ func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 	}()
 
 	// run this in a separate thread so as not to block client.WriteLinesFrom
-	go client.Send()
-	client.Receive(databases)
+	go client.send()
+	client.receive(databases)
 }
