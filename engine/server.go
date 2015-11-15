@@ -7,11 +7,12 @@ import (
 	"log"
 	"net"
 	"os"
-
 )
 
-// RunServer starts listening and initializes channels and kicks off various go routines
-func RunServer(databases map[string]map[string]*Table) {
+/*
+NewServer starts listening and initializes channels and kicks off various go routines
+*/
+func NewServer(databases map[string]map[string]*Table) {
 	ln, err := net.Listen("tcp", ":6000")
 	if err != nil {
 		fmt.Println(err)
@@ -26,30 +27,31 @@ func RunServer(databases map[string]map[string]*Table) {
 			continue
 		}
 
-		// run this in a thread so it doesnt block the for loop
+		// run this in a goroutine so it doesnt block the for loop
 		go handleConnection(conn, databases)
 	} // end for
 }
 
-
-// handleConnection initializes new Clients
+/*
+handleConnection initializes new Connections
+*/
 func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
 
-	// when handleConnection finishes, execute c.Close thereby closing the network connection
+	// when handleConnection finishes, execute c.Close to close the network connection
 	defer c.Close()
 
-	// initialize an instance of the Client struct
-	client := NewClient(c)
+	// initialize an instance of the Connection struct
+	connection := NewConnection(c)
 
 	// when the handleConnection finishes, execute this closure
 	defer func() {
 		// log to server console
 		log.Printf("Connection from %s closed.\n", c.RemoteAddr())
-		// push the client into the rmchan for removal
-		//rmchan <- client
+		// push the connection into the rmchan for removal
+		//rmchan <- connection
 	}()
 
-	// run this in a separate thread so as not to block client.WriteLinesFrom
-	go client.send()
-	client.receive(databases)
+	// run this in a separate goroutine so as not to block connection.WriteLinesFrom
+	go connection.send()
+	connection.receive(databases)
 }

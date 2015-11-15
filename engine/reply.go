@@ -2,14 +2,17 @@ package engine
 
 // Reply is sent back to client
 type Reply struct {
-	Id			string
-	Status  uint16
-	Result	Records
-	Error		string
+	ID     string                 `json:"id"`
+	Status uint16                 `json:"status"`
+	Result map[string]interface{} `json:"result"`
+	Error  string                 `json:"error"`
 }
 
-func NewReply (id string) Reply {
+/*
+NewReply creates a reply. The ID is provided by the command to link commands with the respective reply.
+*/
+func NewReply(id string) Reply {
 	reply := Reply{}
-	reply.Id = id
+	reply.ID = id
 	return reply
 }

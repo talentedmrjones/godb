@@ -1,10 +1,10 @@
 package main
 
 import (
-  "github.com/talentedmrjones/godb/engine"
+	"github.com/talentedmrjones/godb/engine"
 )
 
-func main () {
-  databases := engine.LoadDatabases("./data")
-  engine.RunServer(databases)
+func main() {
+	databases := engine.LoadDatabases("./data")
+	engine.NewServer(databases)
 }
