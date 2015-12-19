@@ -2,7 +2,6 @@ package engine
 
 import (
 	"bufio"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,8 +23,8 @@ func NewConnection(conn net.Conn) *Connection {
 
 }
 
-// Receive continuously looks for data from the socket and relays that to a table's command channel
-func (connection *Connection) receive(databases map[string]map[string]*Table) {
+// receive continuously looks for data from the socket and relays that to a table's command channel
+func (connection *Connection) receive(databases Databases) {
 	// create a buffered reader
 	buffer := bufio.NewReader(connection.socket)
 
@@ -61,7 +60,7 @@ func (connection *Connection) receive(databases map[string]map[string]*Table) {
 		}
 
 		if len(payloadBytes) > 1 {
-			//fmt.Printf("%s", payloadBytes)
+			//fmt.Printf("%s\n", payloadBytes)
 
 			// prepare a command struct to hold incoming JSON
 			command := NewCommand(connection)
@@ -83,17 +82,12 @@ func (connection *Connection) receive(databases map[string]map[string]*Table) {
 func (connection *Connection) send() {
 	for reply := range connection.replies {
 
-		//fmt.Printf("%#v\n", reply)
 		// json encode reply into payload
 		payloadBytes, replyMarshalErr := json.Marshal(reply)
 		if replyMarshalErr != nil {
 			fmt.Printf("commandMarshalError %v", replyMarshalErr)
 		}
 
-		dataSize := make([]byte, 4)
-		binary.BigEndian.PutUint32(dataSize, uint32(len(payloadBytes)))
-
-		connection.socket.Write(dataSize)
 		connection.socket.Write(payloadBytes)
 	}
 }

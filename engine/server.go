@@ -12,7 +12,7 @@ import (
 /*
 NewServer starts listening and initializes channels and kicks off various go routines
 */
-func NewServer(databases map[string]map[string]*Table) {
+func NewServer(databases Databases) {
 	ln, err := net.Listen("tcp", ":6000")
 	if err != nil {
 		fmt.Println(err)
@@ -35,7 +35,7 @@ func NewServer(databases map[string]map[string]*Table) {
 /*
 handleConnection initializes new Connections
 */
-func handleConnection(c net.Conn, databases map[string]map[string]*Table) {
+func handleConnection(c net.Conn, databases Databases) {
 
 	// when handleConnection finishes, execute c.Close to close the network connection
 	defer c.Close()

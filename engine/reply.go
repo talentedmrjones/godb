@@ -2,10 +2,10 @@ package engine
 
 // Reply is sent back to client
 type Reply struct {
-	ID     string                 `json:"id"`
-	Status uint16                 `json:"status"`
-	Result map[string]interface{} `json:"result"`
-	Error  string                 `json:"error"`
+	ID     string `json:"id"`
+	Status uint16 `json:"status"`
+	Result JSON   `json:"result"`
+	Error  string `json:"error"`
 }
 
 /*

@@ -1,0 +1,36 @@
+{
+	"tmj":{
+		"visits":{
+			"oneMinuteWindow":{
+				"Type":"WINDOW:SLIDING",
+				"Interval":1000,
+				"Emit":[
+					{
+						"Key":{
+							"ByValue":"domain"
+						},
+						"Value":{
+							"ByOperation":"OP:COUNT"
+						}
+					}
+				]
+			}
+		},
+		"orders":{
+			"oneMinuteWindow":{
+				"Type":"WINDOW:SLIDING",
+				"Interval":1000,
+				"Emit":[
+					{
+						"Key":{
+							"ByValue":"action"
+						},
+						"Value":{
+							"ByOperation":"OP:COUNT"
+						}
+					}
+				]
+			}
+		}
+	}
+}

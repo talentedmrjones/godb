@@ -11,21 +11,25 @@ import (
 	"path/filepath"
 )
 
+// Databases ...
+type Databases map[string]map[string]*Table
+
 /*
-LoadDatabases scans dataPath returning map[string]map[string]*Table
+LoadDatabases scans dataPath returning Databases
 where the first map[string] key is the name of the database
 and the second map[string] keys are names of tables in that database
 */
-func LoadDatabases(dataPath string) map[string]map[string]*Table {
+func LoadDatabases(dataPath string, config JSON) Databases {
 	// LoadDatabases iterates the specified path loading a db per directory
 	// It returns a map of Db structs
-	databases := make(map[string]map[string]*Table)
+	databases := make(Databases)
 
 	filepath.Walk(dataPath, func(path string, f os.FileInfo, err error) error {
 
 		if f.IsDir() && dataPath != path {
-			fmt.Printf("initializing database: %s\n", f.Name())
-			databases[f.Name()] = NewDatabase(f.Name(), dataPath+"/"+f.Name())
+			database := f.Name()
+			fmt.Printf("initializing database: %s\n", database)
+			databases[database] = NewDatabase(database, dataPath+"/"+database, config[database].(map[string]interface{}))
 		}
 
 		return nil
@@ -39,7 +43,7 @@ func LoadDatabases(dataPath string) map[string]map[string]*Table {
 NewDatabase traverses path assuming that all files in the folder are .godbd data files
 returns a map[string]*Table where the map key is the name of the table taken from the name of the data file
 */
-func NewDatabase(name, path string) map[string]*Table {
+func NewDatabase(name, path string, config JSON) map[string]*Table {
 
 	database := make(map[string]*Table)
 
@@ -49,11 +53,15 @@ func NewDatabase(name, path string) map[string]*Table {
 
 		if !f.IsDir() {
 			tableName := strings.Split(f.Name(), ".")[0]
-
+			var tableConfig JSON
+			if config[tableName] != nil {
+				tableConfig = config[tableName].(map[string]interface{})
+			}
 			fmt.Printf("opening table %s @ %d bytes\n", tableName, f.Size())
-			tbl := NewTable(name, path)
+			tbl := NewTable(name, path, tableConfig)
 			// TODO see if better place for this goroutine
-			go tbl.Run()
+			go tbl.executeCommands()
+			go tbl.executeMaps()
 			database[tableName] = tbl
 		}
 
